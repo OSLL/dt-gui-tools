@@ -111,8 +111,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         event_x = np.array((x, y))
         for layer in self.map.get_object_layers(only_visible=True):
             for object_from_layer in layer.get_objects():
-                obj_x = object_from_layer.position[0]
-                obj_y = object_from_layer.position[1]
+                obj_x = object_from_layer.pose[0]
+                obj_y = object_from_layer.pose[1]
                 obj_array = np.array((obj_x, obj_y))
                 if np.linalg.norm(obj_array - event_x) < DELTA_EUCLIDEAN_DISTANCE:
                     return object_from_layer 
@@ -156,13 +156,14 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
             for x in range(len(layer_data[y])):
                 painter.scale(self.sc, self.sc)
                 painter.translate(x * self.map.gridSize, y * self.map.gridSize)
-                if layer_data[y][x].rotation == 90:
+                tile_rotation = layer_data[y][x].get_rotation()
+                if tile_rotation == 90:
                     painter.rotate(90)
                     painter.translate(0, -self.map.gridSize)
-                elif layer_data[y][x].rotation == 180:
+                elif tile_rotation == 180:
                     painter.rotate(180)
                     painter.translate(-self.map.gridSize, -self.map.gridSize)
-                elif layer_data[y][x].rotation == 270:
+                elif tile_rotation == 270:
                     painter.rotate(270)
                     painter.translate(-self.map.gridSize, 0)
                 painter.drawImage(QtCore.QRectF(0, 0, self.map.gridSize, self.map.gridSize),
@@ -180,8 +181,8 @@ class MapViewer(QGraphicsView, QtWidgets.QWidget):
         for layer_object in layer_data:
             width, height = self.map.gridSize * self.sc / 2, self.map.gridSize * self.sc / 2
             painter.drawImage(
-                QtCore.QRectF(self.map.gridSize * self.sc * layer_object.position[0]- width/2,
-                              self.map.gridSize * self.sc * layer_object.position[1]- height/2,
+                QtCore.QRectF(self.map.gridSize * self.sc * layer_object.pose[0] - width / 2,
+                              self.map.gridSize * self.sc * layer_object.pose[1] - height / 2,
                               width, height),
                 self.objects[layer_object.kind]) if layer_object.kind in self.objects else None
 

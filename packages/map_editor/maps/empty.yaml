@@ -1,10 +1,10 @@
 # 5x5 counter-clockwise loop with a 4-way intersection in the middle
 # Designed to test the 4-way intersection tile and traffic light
 tiles:
-- [asphalt , asphalt, asphalt   , asphalt, asphalt]
-- [asphalt , asphalt, asphalt   , asphalt, asphalt]
-- [asphalt , asphalt, asphalt   , asphalt, asphalt]
-- [asphalt , asphalt, asphalt   , asphalt, asphalt]
-- [asphalt , asphalt, asphalt   , asphalt, asphalt]
-
+- angle: E
+  pose: [4, 4, 0]
+  type: empty
+name: ''
 tile_size: 0.585
+type: 0-tiles
+

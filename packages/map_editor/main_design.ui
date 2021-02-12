@@ -159,7 +159,7 @@
      <x>0</x>
      <y>0</y>
      <width>1028</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="file">
@@ -188,6 +188,17 @@
     </property>
     <addaction name="about_author"/>
    </widget>
+   <widget class="QMenu" name="serialization">
+    <property name="title">
+     <string>Layer serialization</string>
+    </property>
+    <addaction name="tiles"/>
+    <addaction name="signs"/>
+    <addaction name="tags"/>
+    <addaction name="actors"/>
+    <addaction name="watchtowers"/>
+    <addaction name="decorations"/>
+   </widget>
    <widget class="QMenu" name="menuDbl">
     <property name="title">
      <string>View</string>
@@ -200,6 +211,7 @@
    <addaction name="file"/>
    <addaction name="menuDbl"/>
    <addaction name="maps"/>
+   <addaction name="serialization"/>
    <addaction name="help"/>
   </widget>
   <widget class="QToolBar" name="tool_bar">
@@ -287,7 +299,7 @@
    <property name="minimumSize">
     <size>
      <width>274</width>
-     <height>107</height>
+     <height>113</height>
     </size>
    </property>
    <property name="palette">
@@ -856,6 +868,51 @@
    </property>
    <property name="text">
     <string>Layers</string>
+   </property>
+  </action>
+  <action name="tiles">
+   <property name="text">
+    <string>Tiles</string>
+   </property>
+  </action>
+  <action name="signs">
+   <property name="text">
+    <string>Signs</string>
+   </property>
+   <property name="toolTip">
+    <string>signs</string>
+   </property>
+  </action>
+  <action name="tags">
+   <property name="text">
+    <string>Tags</string>
+   </property>
+   <property name="toolTip">
+    <string>tags</string>
+   </property>
+  </action>
+  <action name="actors">
+   <property name="text">
+    <string>Actors</string>
+   </property>
+   <property name="toolTip">
+    <string>actors</string>
+   </property>
+  </action>
+  <action name="decorations">
+   <property name="text">
+    <string>Decorations</string>
+   </property>
+   <property name="toolTip">
+    <string>decorations</string>
+   </property>
+  </action>
+  <action name="watchtowers">
+   <property name="text">
+    <string>Watchtowers</string>
+   </property>
+   <property name="toolTip">
+    <string>watchtowers</string>
    </property>
   </action>
  </widget>

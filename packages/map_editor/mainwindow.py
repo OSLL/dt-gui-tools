@@ -3,6 +3,7 @@ import codecs
 
 import mapviewer
 import map
+import yaml
 
 from classes.mapTile import MapTile
 from mapEditor import MapEditor
@@ -12,15 +13,15 @@ from PyQt5.QtWidgets import QMessageBox, QDesktopWidget, QFormLayout, QVBoxLayou
 from IOManager import *
 import functools, json , copy
 from infowindow import info_window
-from layers.layer_type import LayerType
 import logging
 import utils
 from classes.mapObjects import MapBaseObject as MapObject
 from classes.mapObjects import GroundAprilTagObject
-from layers.relations import get_layer_type_by_object_type
+from layers.layer_type import get_layer_type_by_object_type, LayerType
 from tag_config import get_duckietown_types
 from forms.new_tag_object import NewTagForm
 from forms.default_forms import question_form_yes_no
+from layers.serialization import serialize
 
 logger = logging.getLogger('root')
 TILE_TYPES = ('block', 'road')
@@ -113,6 +114,15 @@ class duck_window(QtWidgets.QMainWindow):
         change_info = self.ui.change_info
         change_map = self.ui.change_map
         change_layer = self.ui.change_layer
+
+        # serialization menu
+        self.ui.tiles.triggered.connect(self.tiles_serialization)
+        self.ui.signs.triggered.connect(self.signs_serialization)
+        self.ui.tags.triggered.connect(self.tags_serialization)
+        self.ui.watchtowers.triggered.connect(self.watchtowers_serialization)
+        self.ui.actors.triggered.connect(self.actors_serialization)
+        self.ui.decorations.triggered.connect(self.decorations_serialization)
+
 
         #  Initialize floating blocks
         block_widget = self.ui.block_widget
@@ -246,6 +256,38 @@ class duck_window(QtWidgets.QMainWindow):
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+
+    #### Serialization block
+
+    def show_serialization(self, layer_type):
+        layer = self.map.get_layer_by_type(layer_type)
+        if layer:
+            serialize(layer)
+        else:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Information)
+            msg.setText('No such layer: {}'.format(str(layer_type)))
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.exec()
+
+    def tiles_serialization(self):
+        self.show_serialization(LayerType.TILES)
+
+    def signs_serialization(self):
+        self.show_serialization(LayerType.TRAFFIC_SIGNS)
+
+    def tags_serialization(self):
+        self.show_serialization(LayerType.GROUND_APRILTAG)
+
+    def watchtowers_serialization(self):
+        self.show_serialization(LayerType.WATCHTOWERS)
+
+    def actors_serialization(self):
+        self.show_serialization(LayerType.ACTORS)
+
+    def decorations_serialization(self):
+        self.show_serialization(LayerType.DECORATIONS)
+    ####
 
     #  Create a new map
     def create_map_triggered(self):
@@ -430,7 +472,7 @@ class duck_window(QtWidgets.QMainWindow):
             elif layer.type in (LayerType.TRAFFIC_SIGNS, LayerType.GROUND_APRILTAG):
                 layer_elements = utils.count_elements(['{}{}'.format(elem.kind, elem.tag_id) for elem in layer.data])
             else:
-                layer_elements = utils.count_elements([elem.kind for elem in layer.data])
+                layer_elements = utils.count_elements([elem.kind for elem in layer.data])   # TODO BAD
             for kind, counter in layer_elements.most_common():
                 item = QtGui.QStandardItem("{} ({})".format(kind, counter))
                 layer_item.appendRow(item)
@@ -507,7 +549,7 @@ class duck_window(QtWidgets.QMainWindow):
                 # save map before adding object
                 self.editor.save(self.map)
                 # adding object
-                self.map.add_objects_to_map([dict(kind=item_name,pos=(.0, .0), rotate=0, height=1,
+                self.map.add_objects_to_map([dict(kind=item_name,pose=(.0, .0), rotate=0, height=1,
                                                   optional=False, static=True)], self.info_json['info'])
                 # TODO: need to understand what's the type and create desired class, not general
                 # also https://github.com/moevm/mse_visual_map_editor_for_duckietown/issues/122
@@ -546,10 +588,10 @@ class duck_window(QtWidgets.QMainWindow):
         self.editor.save(self.map)
         if self.drawState == 'copy':
             self.editor.copySelection(self.copyBuffer, self.mapviewer.tileSelection[0], self.mapviewer.tileSelection[1],
-                                      MapTile(self.ui.delete_fill.currentData()))
+                                      MapTile(type=self.ui.delete_fill.currentData()))
         elif self.drawState == 'cut':
             self.editor.moveSelection(self.copyBuffer, self.mapviewer.tileSelection[0], self.mapviewer.tileSelection[1],
-                                      MapTile(self.ui.delete_fill.currentData()))
+                                      MapTile(type=self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -558,7 +600,7 @@ class duck_window(QtWidgets.QMainWindow):
         if not self.map.get_tile_layer().visible:
             return 
         self.editor.save(self.map)
-        self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(self.ui.delete_fill.currentData()))
+        self.editor.deleteSelection(self.mapviewer.tileSelection, MapTile(type=self.ui.delete_fill.currentData()))
         self.mapviewer.scene().update()
         self.update_layer_tree()
 
@@ -580,7 +622,7 @@ class duck_window(QtWidgets.QMainWindow):
         item_layer = self.map.get_objects_from_layers() # TODO: add self.current_layer for editing only it's objects?
         new_selected_obj = False
         for item in item_layer:
-            x, y = item.position
+            x, y = item.get_pose_xy()
             if x > selection[0] and x < selection[2] and y > selection[1] and y < selection[3]:
                 if item not in self.active_items:
                     self.active_items.append(item)
@@ -595,6 +637,8 @@ class duck_window(QtWidgets.QMainWindow):
             self.mapviewer.raw_selection = [0]*4
         elif key == QtCore.Qt.Key_R:
             self.new_tag_class.create_form()
+        elif key == QtCore.Qt.Key_F:
+            self.serialization_full_map()
         if self.active_items:
             if key == QtCore.Qt.Key_Backspace:
                 # delete object
@@ -610,15 +654,15 @@ class duck_window(QtWidgets.QMainWindow):
                     self.update_layer_tree()
                 return
             for item in self.active_items:
-                logger.debug("Name of item: {}; X - {}; Y - {};".format(item.kind, item.position[0], item.position[1]))
+                logger.debug("Name of item: {}; X - {}; Y - {};".format(item.kind, item.pose[0], item.pose[1]))
                 if key == QtCore.Qt.Key_W:
-                    item.position[1] -= EPS
+                    item.pose[1] -= EPS
                 elif key == QtCore.Qt.Key_S:
-                    item.position[1] += EPS
+                    item.pose[1] += EPS
                 elif key == QtCore.Qt.Key_A:
-                    item.position[0] -= EPS
+                    item.pose[0] -= EPS
                 elif key == QtCore.Qt.Key_D:
-                    item.position[0] += EPS
+                    item.pose[0] += EPS
                 elif key == QtCore.Qt.Key_E:
                     if len(self.active_items) == 1:
                         self.create_form(self.active_items[0])
@@ -626,6 +670,22 @@ class duck_window(QtWidgets.QMainWindow):
                         logger.debug("I can't edit more than one object!")
         self.mapviewer.scene().update()
  
+    def serialization_full_map(self):
+        total_markup = {'main': {}}
+        total = total_markup["main"]
+        dir_path = 'new_format_folder'
+        for type_layer in LayerType:
+            layer = self.map.get_layer_by_type(type_layer)
+            if not layer:
+                logger.debug('Serialization. No such layer {}'.format(type_layer))
+            else:
+                s_layer = dict(layer)['data']
+                total[str(type_layer)] = '!include ./{}/{}.yaml'.format(dir_path, type_layer)
+                with open('./{}/{}.yaml'.format(dir_path, type_layer), 'w+') as file:
+                    yaml.safe_dump(s_layer, file, default_flow_style=False)
+        with open('./{}/main.yaml'.format(dir_path), 'w+') as file:
+            yaml.safe_dump(total_markup, file, default_flow_style=False)
+
     def create_form(self, active_object: MapObject):
         def accept():
             if 'tag_type' in edit_obj:
@@ -648,8 +708,8 @@ class duck_window(QtWidgets.QMainWindow):
                     return  
             for attr_name, attr in editable_attrs.items():
                 if attr_name == 'pos':
-                    active_object.position[0] = float(edit_obj['x'].text())
-                    active_object.position[1] = float(edit_obj['y'].text())
+                    active_object.pose[0] = float(edit_obj['x'].text())
+                    active_object.pose[1] = float(edit_obj['y'].text())
                     continue
                 if type(attr) == bool:
                     active_object.__setattr__(attr_name, edit_obj[attr_name].isChecked())
@@ -746,7 +806,7 @@ class duck_window(QtWidgets.QMainWindow):
         if selection:
             for i in range(max(selection[1], 0), min(selection[3], len(tile_layer))):
                 for j in range(max(selection[0], 0), min(selection[2], len(tile_layer[0]))):
-                    tile_layer[i][j].rotation = (tile_layer[i][j].rotation + 90) % 360
+                    tile_layer[i][j].set_rotation((tile_layer[i][j].get_rotation() + 90) % 360)
             self.mapviewer.scene().update()
 
     def add_apriltag(self, apriltag: GroundAprilTagObject):
@@ -768,11 +828,11 @@ class duck_window(QtWidgets.QMainWindow):
 
     def selectionUpdate(self):
         selection = self.mapviewer.tileSelection
-        filler = MapTile(self.ui.default_fill.currentData())
+        filler = MapTile(type=self.ui.default_fill.currentData())
         tile_layer = self.map.get_tile_layer().data
         if self.drawState == 'brush':
             self.editor.save(self.map)
-            self.editor.extendToFit(selection, selection[0], selection[1], MapTile(self.ui.delete_fill.currentData()))
+            self.editor.extendToFit(selection, selection[0], selection[1], filler)
             if selection[0] < 0:
                 delta = -selection[0]
                 selection[0] = 0

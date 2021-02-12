@@ -93,24 +93,15 @@
         {
             "lang": {
                 "ru": {
-                    "name": "Городские объекты"
+                    "name": "Apriltags"
                 },
                 "en": {
-                    "name": "City object"
+                    "name": "Apriltags"
                 }
             },
-            "id": "objects",
+            "id": "apriltag",
             "elements": [
-                "trafficlight",
-                "barrier",
-                "cone",
-                "duckie",
-                "duckiebot",
-                "tree",
-                "house",
-                "truck",
-                "bus",
-                "building"
+                "apriltag"
             ]
         },
         {
@@ -130,15 +121,37 @@
         {
             "lang": {
                 "ru": {
-                    "name": "Apriltags"
+                    "name": "Подвижные объекты"
                 },
                 "en": {
-                    "name": "Apriltags"
+                    "name": "Actors"
                 }
             },
-            "id": "apriltag",
+            "id": "actors",
             "elements": [
-                "apriltag"
+                "duckie",
+                "duckiebot"
+            ]
+        },
+        {
+            "lang": {
+                "ru": {
+                    "name": "Декорации"
+                },
+                "en": {
+                    "name": "Decorations"
+                }
+            },
+            "id": "decorations",
+            "elements": [
+                "trafficlight",
+                "barrier",
+                "cone",
+                "tree",
+                "house",
+                "truck",
+                "bus",
+                "building"
             ]
         }
     ],
@@ -158,7 +171,7 @@
             "icon": "img/signs/duck-crossing.png"
         },
         "barrier": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Барьер",
@@ -190,7 +203,7 @@
             "white": 25
         },
         "house": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Дом",
@@ -236,7 +249,7 @@
             "white": 110
         },
         "duckiebot": {
-            "type": "object",
+            "type": "actor",
             "lang": {
                 "ru": {
                     "name": "Дакибот",
@@ -286,7 +299,7 @@
             "white": 0
         },
         "tree": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Дерево",
@@ -364,7 +377,7 @@
             "icon": "img/signs/right-T-intersect.png"
         },
         "duckie": {
-            "type": "object",
+            "type": "actor",
             "lang": {
                 "ru": {
                     "name": "Уточка",
@@ -424,7 +437,7 @@
             "icon": "img/signs/4-way-intersect.png"
         },
         "cone": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Конус",
@@ -498,7 +511,7 @@
             "icon": "img/signs/do-not-enter.png"
         },
         "bus": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Автобус",
@@ -526,7 +539,7 @@
             "icon": "img/signs/t-light-ahead.png"
         },
         "building": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Здание",
@@ -554,7 +567,7 @@
             "icon": "img/signs/no-right-turn.png"
         },
         "trafficlight": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Светофор",
@@ -628,7 +641,7 @@
             "icon": "img/signs/pedestrian.png"
         },
         "truck": {
-            "type": "object",
+            "type": "decoration",
             "lang": {
                 "ru": {
                     "name": "Грузовик",

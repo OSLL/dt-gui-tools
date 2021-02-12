@@ -250,28 +250,34 @@ def map_to_png(map_viewer: MapViewer, map_name):
 def map_to_yaml(map, map_dir_path, lab_code=None):
     map_info = dict(map)
     for layer in map_info['layers']:
-        if layer['type'] == str(LayerType.TILES):
+        if str(LayerType.TILES) in layer:
             layer['tile_size'] = map_info['tile_size']/100
         with open('{}/{}-{}.yaml'.format(map_dir_path, layer['type'], lab_code if lab_code else layer['name']), 'w') as map_file:
-            yaml.safe_dump(layer, map_file, default_flow_style=None)
-    return
+            yaml.safe_dump(layer['data'], map_file, default_flow_style=None)
 
 
 def tiles_to_objects(tiles):
-    tiles_objects_array = []
-    for tile_string in tiles:
-        tiles_object_string = []
-        for tile in tile_string:
-            if '/' in tile != -1:
-                kind, rotate = tile.split('/')
-                for angle, word in rotation_val.items():
-                    if word == rotate:
-                        tile = {'kind': kind, 'rotate': angle}
-            else:
-                tile = {'kind': tile, 'rotate': 0}
-            tiles_object_string.append(MapTile(tile['kind'], tile['rotate']))
-        tiles_objects_array.append(tiles_object_string)
-    return tiles_objects_array
+    default_fill_for_grid = {}
+
+    # get size of grid
+    size_x = max((tile['pose'][0] for tile in tiles)) + 1
+    size_y = max((tile['pose'][1] for tile in tiles)) + 1
+    size = (size_x, size_y)
+
+    # create grid
+    import numpy as np
+    grid = np.full(size, fill_value=default_fill_for_grid)
+
+    # fill grid by load tiles
+    for tile in tiles:
+        i, j = tile['pose'][:2]
+        grid[i][j] = tile
+
+    # fill empty tile in grid:
+    for i, line in enumerate(grid):
+        for j, tile in enumerate(line):
+            line[j] = MapTile(**tile) if tile != default_fill_for_grid else MapTile(**{'pose': [i, j, 0], 'type': 'empty', 'angle': 'E'})
+    return grid.tolist()
 
 
 def map_objects_to_objects(map_objects):

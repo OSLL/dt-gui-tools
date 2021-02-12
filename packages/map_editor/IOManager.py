@@ -4,14 +4,14 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from map_parser import *
 from utils import get_list_dir_with_path
-from layers.relations import get_layer_type_by_value
+from layers.layer_type import get_layer_type_by_value
 
 
 def init_map(parent: QtWidgets.QWidget):
     input_map = './maps/empty.yaml'
     if new_map:
         map_info = data_from_file(input_map)
-        parent.map.set_tile_layer(tiles_to_objects((map_info['tiles'])))
+        parent.map.set_tile_layer(tiles_to_objects(map_info['tiles']))
         param = map_info['objects'] if 'objects' in map_info else None
         parent.map.clear_objects_layers()
         parent.map.add_objects_to_map(map_objects_to_objects(param), parent.info_json['info'])
@@ -49,6 +49,7 @@ def save_map_as(parent: QtWidgets.QWidget):
     if parent.map.layers:
         output_map_dir = QFileDialog.getExistingDirectory(parent, 'Save map to directory', '.',  QFileDialog.ShowDirsOnly | QFileDialog.DontResolveSymlinks)
         if output_map_dir:
+            parent.map.name = output_map_dir
             lab_code, ok = get_lab_code(parent)
             if ok:
                 map_to_yaml(parent.map, output_map_dir, lab_code)

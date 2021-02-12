@@ -20,8 +20,7 @@ class NewTagForm(QDialog):
             return
 
         if tag_id in self.tags[self.combo_type.currentText()]:
-            self.apriltag_added.emit(GroundAprilTagObject(dict(kind="apriltag",pos=(1.0, 1.0), rotate=0, height=1,
-                                                  optional=False, static=True, tag_type=tag_type, tag_id=tag_id)))
+            self.apriltag_added.emit(GroundAprilTagObject(**dict(kind="apriltag", pose=(1.0, 1.0), tag_id=tag_id)))
             self.close()
         else:
             msgBox = QMessageBox()

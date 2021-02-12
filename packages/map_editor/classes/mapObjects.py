@@ -1,116 +1,132 @@
 # -*- coding: utf-8 -*-
+from .baseClass import PlacedObject
 from .baseClass import BaseEditorClass
+from random import randint
 
+class MapBaseObject(PlacedObject):
 
-class MapBaseObject(BaseEditorClass):
-    def __init__(self, init_info):
-        BaseEditorClass.__init__(self, init_info)
-        self.position = list(init_info['pos'])
-        self.height = init_info['height']
-        self.optional = init_info['optional']
-        self.static = init_info['static']
+    def __init__(self, **kwargs):
+        PlacedObject.__init__(self, **kwargs)
 
     def __iter__(self):
         yield from {
-            'kind': self.kind,
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
-            'optional': self.optional,
-            'static': self.static
+            'pose': self.pose
         }.items()
 
     def get_editable_attrs(self):
         return {
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
-            'optional': self.optional,
-            'static': self.static
+            'pose': self.pose,
         }
 
 
-class SignObject(MapBaseObject):
+class TagObject(MapBaseObject):
 
-    def __init__(self, init_info):
-        MapBaseObject.__init__(self, init_info)
-        self.tag_id = init_info["tag_id"] if "tag_id" in init_info else 0
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.tag_id = kwargs['tag_id'] if 'tag_id' in kwargs else 0
+
+    def __iter__(self):
+        yield from {
+            'tag_id': self.tag_id,
+            'data':
+            {
+                'pose': {
+                    'xyz': self.pose[:2],
+                    #'slot': self.pose[2],
+                    'rotate': self.pose[3:]
+                }
+            }
+        }.items()
 
     def get_editable_attrs(self):
         return {
-            'pos': self.position,
-            'rotate': self.rotation,
-            "tag_id": self.tag_id,
+            'pose': self.pose,
+            'tag_id': self.tag_id,
         }
-    
-    def __iter__(self):
-        yield from {
-            'kind': self.kind,
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
-            'optional': self.optional,
-            'static': self.static,
-            "tag_id": self.tag_id,
-        }.items()
-    
-
-class CityObject(MapBaseObject):
-
-    def __init__(self, init_info):
-        MapBaseObject.__init__(self, init_info)
 
 
-class WatchTowerObject(MapBaseObject):
+class SignObject(TagObject):            # 1 layer
+    pass
 
-    def __init__(self, init_info):
-        MapBaseObject.__init__(self, init_info)
-        self.hostname = init_info["hostname"] if "hostname" in init_info else "watchtower00" # TODO: How to init hostname?
+class GroundAprilTagObject(TagObject):  # 2 layer
+    pass
+
+
+class WatchTowerObject(MapBaseObject):  # 3 layer
+
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.hostname = kwargs["hostname"] if "hostname" in kwargs else "watchtower{}".format(randint(0, 10**3))  # TODO: How to init hostname?
 
     def __iter__(self):
         yield from {
-            'kind': self.kind,
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
-            'optional': self.optional,
-            'static': self.static,
-            'hostname': self.hostname
+            'hostname': self.hostname,
+            'data':
+            {
+                'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                }
+            }
         }.items()
 
     def get_editable_attrs(self):
         return {
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
+            'pose': self.pose,
             'hostname': self.hostname
         }
 
 
-class GroundAprilTagObject(MapBaseObject):
-
-    def __init__(self, init_info):
-        MapBaseObject.__init__(self, init_info)
-        self.tag_id = init_info["tag_id"] if "tag_id" in init_info else 0
-        self.tag_type = init_info["tag_type"] if "tag_type" in init_info else ""
+class RegionObject(MapBaseObject):       # 4 layer NOT IMPLEMENTED
+    pass
 
 
-    def get_editable_attrs(self):
-        return {
-            'pos': self.position,
-            'rotate': self.rotation,
-            "tag_id": self.tag_id,
-            "tag_type": self.tag_type
-        }
-    
+class ActorObject(MapBaseObject):       # 4 layer
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.kind = kwargs['kind']
+        self.id = kwargs['ID'] if 'ID' in kwargs else '<ID_{}>'.format(self.kind)
+
     def __iter__(self):
         yield from {
             'kind': self.kind,
-            'height': self.height,
-            'pos': self.position,
-            'rotate': self.rotation,
-            'optional': self.optional,
-            'static': self.static,
-            "tag_id": self.tag_id,
-            "tag_type": self.tag_type
+            'data':
+            {
+                'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                },
+                'id': self.id
+            }
         }.items()
+
+    def get_editable_attrs(self):
+        return {
+            'pose': self.pose,
+            'kind': self.kind,
+            'id': self.id
+        }
+
+
+class DecorationObject(MapBaseObject):  # 6 layer
+    def __init__(self, **kwargs):
+        MapBaseObject.__init__(self, **kwargs)
+        self.size = kwargs['size'] if 'size' in kwargs else 1
+        self.mesh = kwargs['size'] if 'size' in kwargs else ['package', 'path']
+
+    def __iter__(self):
+        yield from {
+            'pose': {
+                    'xyz': self.pose[:3],
+                    'rotate': self.pose[3:]
+                },
+            'mesh': self.mesh,
+            'size': self.size
+        }.items()
+
+    def get_editable_attrs(self):
+        return {
+            'pose': self.pose,
+            'mesh': self.mesh,
+            'size': self.size
+        }

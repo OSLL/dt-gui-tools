@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from layers.map_layer import MapLayer
+from layers.base_layer import MapLayer
+from layers.map_layer import TileLayer
 from layers.layer_type import LayerType
-import layers.relations as layer_relations
+import layers.layer_type as layer_relations
 from tag_config import TRAFFIC_SIGN_TYPES
 import logging
 
@@ -13,7 +14,7 @@ class DuckietownMap:
     gridSize = 58.5
 
     def __init__(self, empty=False):
-        self.layers = [MapLayer(LayerType.TILES, [[]]), MapLayer(LayerType.ITEMS, [])] if not empty else []
+        self.layers = [TileLayer(LayerType.TILES, [[]])] if not empty else []
 
     def __iter__(self):
         yield from {
@@ -156,7 +157,8 @@ class DuckietownMap:
                         "set_layer_name/set_layer_name_by_type".format(layer_type))
             return False
         else:
-            return self.add_layer(MapLayer(layer_type, layer_data if layer_data else [], layer_name))
+            layer_class = layer_type.get_layer_class()
+            return self.add_layer(layer_class(layer_type, layer_data if layer_data else [], layer_name))
 
     def add_layer(self, layer: MapLayer):
         """
@@ -224,7 +226,8 @@ class DuckietownMap:
             if layer_type == LayerType.TRAFFIC_SIGNS:
                 tag_ids = TRAFFIC_SIGN_TYPES[map_object['kind']]
                 map_object['tag_id'] = tag_ids[0] if 'tag_id' not in map_object and tag_ids else 0
-            map_object = MapLayer.create_layer_object(object_type, map_object)
+                print(tag_ids, dict(map_object))
+            map_object = LayerType.create_layer_object(object_type, map_object)
             if not self.get_layer_by_type(layer_type):
                 self.add_layer_from_data(layer_type, [map_object])
             else:
